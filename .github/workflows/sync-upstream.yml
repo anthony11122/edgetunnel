@@ -1,0 +1,36 @@
+name: Sync Upstream (cmliu/edgetunnel)
+
+on:
+  schedule:
+    - cron: '0 4 * * *'  # 每天北京时间12点自动同步（UTC 04:00）
+  workflow_dispatch:      # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout your fork
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/cmliu/edgetunnel.git
+          git fetch upstream
+
+      - name: Sync main branch
+        run: |
+          git checkout main
+          git merge upstream/main --no-edit || echo "No changes to merge"
+
+      - name: Push to your fork
+        run: |
+          git push origin main
